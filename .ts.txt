@@ -1,59 +1,49 @@
 import { Component, OnInit } from '@angular/core';
- import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
-
+import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { TravelAwayService } from '../../services/travel-away.service';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
+
 @Component({
-  selector: 'app-editprofile',
-  templateUrl: './editprofile.component.html',
-  styleUrls: ['./editprofile.component.css']
+  selector: 'app-customercare',
+  templateUrl: './customercare.component.html',
+  styleUrls: ['./customercare.component.css']
 })
-export class EditprofileComponent implements OnInit {
-  registerForm: FormGroup;
-  date: Date
-  constructor(private _formBuilder: FormBuilder, private service: TravelAwayService, private router: Router) { }
+export class CustomercareComponent implements OnInit {
+  CCForm: FormGroup
+  status: boolean;
+  errorAddMsg: string;
+  showDiv: boolean = false;
+  msg: string;
+  bookingId: number
+  constructor(private _formBuilder: FormBuilder, private service: TravelAwayService, private _router: Router, private route: ActivatedRoute) { }
 
-  ngOnInit() {
-    var unamePattern: string = "^[A-Za-z]*$";
-    //var numberPattern:string="^[1-9]{1}[0-9]{9}$"
-    
-    var mobNumberPattern = "^((\\+91-?)|0)?[0-9]{10}$";
-    var addressPattern = "/^[A-z\d_@.#$=!%^)(\]:\*;\?\/\,}{'\|<>\[&\+-]*$/"
-    var conpattern = "^[1-9][0-9]*$"
-    this.registerForm = this._formBuilder.group(
-      {
-        firstName: ['', [Validators.required, Validators.pattern(unamePattern)]],
-        lastName: ['', [Validators.required, Validators.pattern(unamePattern)]],
-        gender: ['', [Validators.required]],
-        contactNumber: ['', [Validators.required, Validators.min(1000000000), Validators.max(9999999999), Validators.pattern(conpattern)]],
-        dateOfBirth: ['', [Validators.required,checkDate]],
-        address: ['', [Validators.pattern(addressPattern), Validators.required]]
-      }
+  ngOnInit(): void {
+    this.bookingId = parseInt(this.route.snapshot.params['bookingId'])
+    this.CCForm = this._formBuilder.group({
+      Comment: ['', Validators.required]
+    }
+    )
+  }
+  SubmitForm(form: FormGroup) {
+    console.log(typeof (this.CCForm.value.Comment))
+
+    this.service.CustCare(this.CCForm.value.Comment, this.bookingId).subscribe(
+      resSuccess => {
+        this.status = resSuccess;
+        if (resSuccess) {
+          alert('Query added Successfully... We will get back to you Thanks!');
+          this._router.navigate(['/viewBooking'])
+        }
+        else
+          alert("Sorry...your Query could not be register")
+      },
+
+      err => {
+        this.errorAddMsg = err;
+        alert( 'Some error occurred..please again after some time');
+      },
+      () => console.log('Add Query completed')
     )
   }
 
-  editProfile(form: FormGroup) {
-    this.service.editProfile(this.registerForm.value.firstName, this.registerForm.value.lastName, this.registerForm.value.gender,
-      this.registerForm.value.contactNumber, this.registerForm.value.dateOfBirth, this.registerForm.value.address).subscribe(
-        res => {
-          if (res) {
-            alert("profile has been updated successfully")
-            this.router.navigate(['/home'])
-          }
-          else {
-            alert("sorry,profile has not been updated")
-          }
-        },
-
-        error => { alert("some error occured ,please try again after some time") },
-        () => console.log("editProfile method executed successfully")
-    )
-  }
-}
-
-function checkDate(control: FormControl) {
-  var currentDate = new Date();
-  var givenDate = new Date(control.value)
-  if (givenDate >= currentDate || givenDate == null) { return { dateError: { message: "Enter a date before today's date" } } }
-  else { return null }
 }
