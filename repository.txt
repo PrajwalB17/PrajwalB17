@@ -1,0 +1,428 @@
+using Infosys.TravelAwayDAL.Models;
+using Microsoft.Data.SqlClient;
+using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Text;
+
+namespace Infosys.TravelAwayDAL
+{
+
+    public class TravelAwayRepository
+    {
+        TravelAwayDbContext context;
+        public TravelAwayRepository()
+        {
+            context = new TravelAwayDbContext();
+
+        }
+
+        public List<PackageCategory> GetPackageCategories()
+        {
+
+            List<PackageCategory> categoryList = context.PackageCategories.ToList();
+
+            return categoryList;
+
+        }
+
+        public PackageCategory GetPackageDetailsByCatgeoryId(string categoryId)
+        {
+            PackageCategory pkg=new PackageCategory();
+             try 
+           {    
+               pkg=context.PackageCategories.Find(categoryId);
+        
+           }
+            catch (Exception)
+          {
+
+              pkg=null;
+           }
+            return pkg;
+        }
+        public HashSet<string> getHotelByCity()
+        {
+             List<string> hotelList = new List<string>();
+            HashSet<string> hotel = new HashSet<string>();
+            hotelList = context.Hotels.Select(pkg => pkg.City).ToList();
+            foreach (var item in hotelList)
+            {
+                hotel.Add(item);
+            }
+
+            return hotel;
+        }
+    
+        public List<Package> GetPackages()
+        {
+            List<Package> packageList = context.Packages.ToList();
+            return packageList;
+        }
+        public List<Hotel> GetHotels()
+        {
+            List<Hotel> hotelList=context.Hotels.ToList();
+            return hotelList;
+                  
+        }
+        public List<Vehicle> GetVehicles()
+        {
+            List<Vehicle> vehicleList = context.Vehicles.ToList();
+            return vehicleList;
+        }
+        public bool AddRating(Rating rating)
+        {
+            try
+            {
+                context.Add(rating);
+                context.SaveChanges();
+                return true;
+
+            }
+            catch (Exception)
+            {
+
+                return false;
+            }
+        }
+        public bool AddRentVehicle(VehicleRent vehicle)
+        {
+            bool status = false;
+            try
+            {
+                context.Add(vehicle);
+                context.SaveChanges();
+                status = true;
+            }
+            catch (Exception)
+            {
+
+                status = false;
+            }
+            return status;
+        }
+   
+        public List<ReportCategory> GenerateReportByCategory()
+        {
+            List<ReportCategory> categoryIdList = new List<ReportCategory>();
+
+            try
+            {
+                categoryIdList = context.ReportCategories.FromSqlInterpolated($"select *from ufn_generateReortByCategoryId()").ToList();
+            }
+            catch (Exception)
+            {
+
+                categoryIdList = null;
+            }
+            return categoryIdList;
+        }
+        public List<ReportMonth> GenerateReportByMonth(int month)
+        {
+            List<ReportMonth> MonthList = new List<ReportMonth>();
+            try
+            {
+                MonthList = context.ReportMonths.FromSqlInterpolated($"select * from ufn_getDetailsByMonth({month})").ToList();
+            }
+            catch (Exception)
+            {
+
+                MonthList=null;
+            }
+            return MonthList;
+        }
+        public List<ReportPackageName> GenerateReportByPackageName()
+        {
+            List<ReportPackageName> PackageNameList = new List<ReportPackageName>();
+            try
+            {
+                PackageNameList = context.ReportPackageNames.FromSqlInterpolated($"select * from ufn_generateReportByPackageName()").ToList();
+            }
+            catch (Exception)
+            {
+
+                PackageNameList = null;
+            }
+            return PackageNameList;
+        }
+
+        public int getCostOfAccomodation(string roomType,int numberOfRooms,string hotelName,string hotelRating)
+        {
+            Hotel obj = new Hotel();
+            
+             obj = context.Hotels.Where(pkg => pkg.HotelName == hotelName && pkg.HotelRating == hotelRating).Select(a=>a).FirstOrDefault();
+            if (roomType == "SingleRoomPrice")
+                return  (int)(numberOfRooms * obj.SingleRoomPrice);
+            else if (roomType == "DoubleRoomPrice")
+                return (int)(numberOfRooms * obj.DoubleRoomPrice);
+            else if (roomType == "DeluxeRoomType")
+                return (int)(numberOfRooms * obj.DeluxeRoomPrice);
+            else
+                return (int)(numberOfRooms * obj.SuitePrice);        
+        }
+
+        public List<Booking> GetBookings(string emailId)
+        {
+            List<Booking> bookingList = context.Bookings.Where(a => a.EmailId == emailId).ToList();
+            return bookingList;
+        }
+        public bool ConfirmPayment(int estimatedCost, int bookingId)
+        {
+            Payment payment = new Payment();
+            Booking pkg = new Booking();
+            try
+            {
+                pkg = context.Bookings.Find(bookingId);
+                pkg.BookingStatus = "Confirmed";
+                payment.BookingStatus = "Confirmed";
+                payment.Amount = estimatedCost;
+                payment.BookingId = bookingId;
+                context.Add(payment);
+                context.Update(pkg);
+                context.SaveChanges();
+                
+                return true;
+            }
+            catch (Exception)
+            {
+
+                return false;
+            }
+        }
+
+
+        public bool AddAccomodation(Accomodation acc)
+        {
+            
+            try
+            {
+                context.Accomodations.Add(acc);
+                context.SaveChanges();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+      
+        public bool AddHotel(Hotel hotel)
+        {
+            Boolean status = false;
+            try
+            {
+                context.Hotels.Add(hotel);
+                context.SaveChanges();
+                status = true;
+
+            }
+            catch (Exception)
+            {
+
+                status = false;
+            }
+            return status;
+        }
+      
+        public bool Addvehicle(Vehicle vehicle)
+        {
+            Boolean status = false;
+            try
+            {
+                context.Vehicles.Add(vehicle);
+                context.SaveChanges();
+                status = true;
+
+            }
+            catch (Exception)
+            {
+
+                status = false;
+            }
+            return status;
+        }
+        public bool AddCustomerCare(CustomerCare custCare)
+        {
+            bool status = false;
+            CustomerCare obj = new CustomerCare();
+            try
+            {
+                
+                context.Add(custCare);
+                context.SaveChanges();
+                status = true;
+            }
+            catch (Exception)
+            {
+                status = false;
+               
+            }
+            return status;
+        }
+
+        public bool AddRentingDetails(VehicleRent rentDetails)
+        {
+            VehicleRent vehicle = new VehicleRent();
+            try
+            {
+                
+                context.Add(rentDetails);
+                context.SaveChanges();
+                return true;
+            }
+            catch (Exception)
+            {
+
+                return false;
+            }
+        }
+        public int validate_credentials(string emailId, string password)
+        {
+            int res = (from s in context.Customers
+                       select TravelAwayDbContext.ufn_validateCredentails(emailId, password)).FirstOrDefault();
+            return res;
+        }
+
+        public int EmployeeCredentials(string emailId, string password)
+        {
+            int res = (from s in context.EmployeeLogins
+                       select TravelAwayDbContext.ufn_EmployeeCredentails(emailId, password)).FirstOrDefault();
+            return res;
+
+        }
+
+        public bool RegisterUser(Customer customer)
+        {
+            bool status = false;
+            Customer localUser = new Customer();
+            Customer temp = new Customer();
+            try
+            {
+                temp = context.Customers.Where(p => p.EmailId == customer.EmailId).Select(p => p).FirstOrDefault();
+                if (temp == null)
+                {
+                    localUser.FirstName = customer.FirstName;
+                    localUser.LastName = customer.LastName;
+                    localUser.EmailId = customer.EmailId;
+                    localUser.Password = customer.Password;
+                    localUser.Gender = customer.Gender;
+                    localUser.ContactNumber = customer.ContactNumber;
+                    localUser.DateOfBirth = customer.DateOfBirth;
+                    localUser.Address = customer.Address;
+                    context.Add<Customer>(localUser);
+                    context.SaveChanges();
+                    status = true;
+                }
+                else
+                    status = false;
+
+            }
+            catch (Exception)
+            {
+
+                status = false;
+            }
+            return status;
+        }
+
+        public int AddBookingUsingUSP(string emailid,string packageId, string place, decimal contactNumber, string address, DateTime dateoftravel, int adults, int children,String bookingStatus)
+        {
+            int returnVal = 0;
+            int response = 0;
+            int bookingId = 0;
+            try
+            {
+                SqlParameter emailidPrm = new SqlParameter("@emailId", emailid);
+                SqlParameter packageIdPrm = new SqlParameter("@packageId", packageId);
+                SqlParameter placePrm = new SqlParameter("@place", place);
+                SqlParameter contactNumberprm = new SqlParameter("@ContactNo", contactNumber);
+                SqlParameter addressprm = new SqlParameter("@ResidentialAddress", address);
+                SqlParameter dateOfTravelprm = new SqlParameter("@DateOfTravel", dateoftravel);
+                SqlParameter adultsprm = new SqlParameter("@Adults", adults);
+                SqlParameter childrenprm = new SqlParameter("@Children", children);
+                SqlParameter bookStatusPrm = new SqlParameter("@bookingStatus", bookingStatus);
+                SqlParameter idprm = new SqlParameter("@id", System.Data.SqlDbType.Int);
+                idprm.Direction = System.Data.ParameterDirection.Output;
+                SqlParameter retValprm = new SqlParameter("@ret", System.Data.SqlDbType.Int);
+                retValprm.Direction = System.Data.ParameterDirection.Output;
+                response = context.Database.ExecuteSqlRaw("Exec @ret=usp_AddbookingPackage @emailId,@packageId,@place,@ContactNo," +
+                    "@ResidentialAddress,@DateOfTravel,@Adults,@Children,@bookingStatus,@id out",
+                         retValprm, emailidPrm, packageIdPrm, placePrm, contactNumberprm, addressprm, dateOfTravelprm, adultsprm, childrenprm,bookStatusPrm, idprm);
+                if (response > 0)
+                {
+                    returnVal = Convert.ToInt32(retValprm.Value);
+                    bookingId = Convert.ToInt32(idprm.Value);
+                }
+            }
+            catch (Exception)
+            {
+                returnVal = 0;
+            }
+            return bookingId;
+        }
+
+        public int updateProfileUsingUsp(string emailid, string firstName, string lastName, string gender, decimal contactNumber, DateTime dateOfBirth, string Address)
+        {
+            int result = 0;
+            int res = 0;
+            try
+            {
+                SqlParameter emailPrm = new SqlParameter("@emailId", emailid);
+                SqlParameter firstnamePrm = new SqlParameter("@firstName", firstName);
+                SqlParameter lastnamePrm = new SqlParameter("@lastName", lastName);
+                SqlParameter genderPrm = new SqlParameter("@gender", gender);
+                SqlParameter contactNumberPrm = new SqlParameter("@contactNumber", contactNumber);
+                SqlParameter dateOfBirthPrm = new SqlParameter("@dateOfBirth", dateOfBirth);
+                SqlParameter addressPrm = new SqlParameter("@address", Address);
+                SqlParameter retValPrm = new SqlParameter("@ret", System.Data.SqlDbType.Int);
+                retValPrm.Direction = System.Data.ParameterDirection.Output;
+                res = context.Database.ExecuteSqlRaw("Exec @ret=usp_updateProfile @emailId,@firstName,@lastName,@gender,@contactNumber,@dateOfBirth,@address",
+                    retValPrm, emailPrm, firstnamePrm, lastnamePrm, genderPrm, contactNumberPrm, dateOfBirthPrm, addressPrm);
+                if (res > 0)
+                {
+                    result = Convert.ToInt32(retValPrm.Value);
+                }
+            }
+            catch (Exception)
+            {
+
+                result = 0;
+            }
+            return result;
+        }
+
+        public int GetCostOfBooking(string categoryId, int bookingId)
+        {
+            int res = 0;
+            int returns = 0;
+            int cost = 0;
+            try
+            {
+                SqlParameter catPrm = new SqlParameter("@categoryId", categoryId);
+                SqlParameter bookPrm = new SqlParameter("@bookingId", bookingId);
+                SqlParameter retPrm = new SqlParameter("@ret", System.Data.SqlDbType.Int);
+                retPrm.Direction = System.Data.ParameterDirection.Output;
+                SqlParameter costPrm = new SqlParameter("@cost", System.Data.SqlDbType.Int);
+                costPrm.Direction = System.Data.ParameterDirection.Output;
+                returns = context.Database.ExecuteSqlRaw("Exec @ret=usp_CalculateTotalCost @categoryId,@bookingId,@cost out",
+                    retPrm, catPrm, bookPrm, costPrm);
+                //  Console.WriteLine(returns);
+               
+                    res = Convert.ToInt32(retPrm.Value);
+                    cost = Convert.ToInt32(costPrm.Value);
+                
+
+            }
+            catch (Exception)
+            {
+
+                cost = -99;
+            }
+            return cost;
+        }
+
+
+
+    }
+}

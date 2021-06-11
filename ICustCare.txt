@@ -1,0 +1,6 @@
+export interface ICustCare {
+  requestId: number
+  bookingId: number
+  queryStatus: string
+  custQuery: string
+}

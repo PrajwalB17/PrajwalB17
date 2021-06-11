@@ -1,0 +1,48 @@
+
+using Infosys.TravelAwayDAL;
+using Infosys.TravelAwayDAL.Models;
+using System;
+using System.Collections.Generic;
+
+namespace Infosys.TravelAwayConsoleUI
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Hello World!");
+            TravelAwayRepository res = new TravelAwayRepository();
+          
+           // Vehicle vehicle = new Vehicle();
+           // vehicle.RatePerHour = 350;
+           // vehicle.RatePerKm = 200;
+           // vehicle.VehicleName = "merce";
+           // vehicle.VehicleId = 0;
+           // vehicle.VehicleType = "Four-Wheeler";
+           // //  status = res.Addvehicle(vehicle);
+           // //  bool a = res.ConfirmPayment(12000,1002);
+           // //res.getHotelByCity();
+           //DateTime dateoftravel = new DateTime(2021, 01, 01);
+           // //int result = res.AddBookingUsingUSP("praveen@gmail.com", "P001", "banglore", 8107043794, "delhi", dateoftravel, 2, 3, "Payment Pending");
+           // //Console.WriteLine(  result);
+           // //int result = res.getCostOfAccomodation("DeluxeRoomPrice", 4, "Swosti Grand", "4-star");
+           // //res.GenerateReportByCategory();
+           //List<ReportMonth> list= res.GenerateReportByMonth(12);
+           // foreach (var item in list)
+           // {
+           //     Console.WriteLine(item.NumbersOfBooking);
+           //     Console.WriteLine(item.PackageId);
+           // }
+
+
+            int result = res.EmployeeCredentials("praveen@gmail.com", "12345678");
+            Console.WriteLine(result);
+
+
+            int result2 = res.validate_credentials("Anzio_Don@infosys.com", "donno@123");
+                            Console.WriteLine(result2);
+
+
+        }
+    }
+}
